@@ -13,7 +13,7 @@ var thunky = require('thunky');
 
 /**
  * Noop function.
- * 
+ *
  * @type {Function}
  * @api private
  */
@@ -22,7 +22,7 @@ var noop = function noop(){};
 
 /**
  * Core object inherited from emitter.
- * 
+ *
  * @type {Object}
  * @api public
  */
@@ -31,7 +31,7 @@ var oplog = Object.create(Emitter.prototype);
 
 /**
  * Oplog events.
- * 
+ *
  * @type {Object}
  * @api private
  */
@@ -44,15 +44,15 @@ oplog.events = {
 
 /**
  * Create a oplog object.
- * 
+ *
  * @param {Object|String} conn
  * @param {Object} options
  * @return {Oplog}
  * @api public
  */
 
-oplog.create = function create(conn, options) {
-  return Object.create(this).init(conn, options);
+oplog.create = function create(conn, options, cb) {
+  return Object.create(this).init(conn, options, cb);
 };
 
 /**
@@ -64,7 +64,7 @@ oplog.create = function create(conn, options) {
  * @api private
  */
 
-oplog.init = function init(conn, options) {
+oplog.init = function init(conn, options, user_cb) {
   var ctx = this;
   options = options || {};
   this.ns = options.ns;
@@ -77,6 +77,7 @@ oplog.init = function init(conn, options) {
         if (err) return ctx.onerror(err, cb);
         debug('successfully connected');
         db = db.db(options.database || 'local');
+        if (user_cb) user_cb(db);
         cb(null, ctx.db = db);
       });
     } else {
@@ -101,7 +102,7 @@ oplog.tail = function tail(fn) {
   fn = fn || noop;
   ctx.ready(function ready(err, db) {
     if (err) return fn(err);
-    ctx.cursor = cursor({ 
+    ctx.cursor = cursor({
       db: db,
       ns: ctx.ns,
       ts: ctx.ts,
@@ -170,7 +171,7 @@ oplog.destroy = function destroy(fn) {
 
 /**
  * Method to extend the module.
- * 
+ *
  * @param {Function} fn
  * @api public
  */
@@ -243,6 +244,6 @@ oplog.onerror = function onerror(err, fn) {
  * @api public
  */
 
-module.exports = function createOplog(conn, options) {
-  return oplog.create(conn, options);
+module.exports = function createOplog(conn, options, cb) {
+  return oplog.create(conn, options, cb);
 };
