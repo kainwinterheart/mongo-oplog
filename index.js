@@ -77,8 +77,9 @@ oplog.init = function init(conn, options, user_cb) {
         if (err) return ctx.onerror(err, cb);
         debug('successfully connected');
         db = db.db(options.database || 'local');
-        if (user_cb) user_cb(db);
-        cb(null, ctx.db = db);
+	var next = function() { cb(null, ctx.db = db); };
+        if (user_cb) user_cb(db, next);
+	else next();
       });
     } else {
       if (conn && conn.collection) return cb(null, ctx.db = conn);
